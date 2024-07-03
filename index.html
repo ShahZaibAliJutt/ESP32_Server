@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 Data</title>
+</head>
+<body>
+  <h1>ESP32 Data</h1>
+  <div id="login">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+  <div id="data" style="display:none;">
+    <h2>Temperature and Humidity Data</h2>
+    <ul id="dataList"></ul>
+  </div>
+  <script>
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const response = await fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        localStorage.setItem('token', result.token);
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('data').style.display = 'block';
+        fetchData();
+      } else {
+        alert('Login failed');
+      }
+    }
+
+    async function fetchData() {
+      const response = await fetch('http://localhost:3000/data', {
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+        },
+      });
+      const data = await response.json();
+      const dataList = document.getElementById('dataList');
+      dataList.innerHTML = '';
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `Temperature: ${item.temperature}, Humidity: ${item.humidity}`;
+        dataList.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
